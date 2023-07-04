@@ -1,5 +1,8 @@
+import datetime
+import sys
 import os
 import argparse
+import socket
 from tqdm import tqdm
 import numpy as np
 
@@ -94,7 +97,6 @@ parser.add_argument(
 parser.add_argument("--n_gpu", help="", required=False, default=1, type=int)
 parser.add_argument("--eval_by_step", help="", required=False, default=-1, type=int)
 parser.add_argument("--fix_encoder", action="store_true", help="")
-parser.add_argument("--model_type", help="", required=False, default="bert", type=str)
 parser.add_argument(
     "--model_name_or_path", help="", required=False, default="bert", type=str
 )
@@ -213,9 +215,7 @@ parser.add_argument(
     default=None,
     type=int,
 )
-parser.add_argument(
-    "--output_dir", help="", required=False, default="save/temp/", type=str
-)
+parser.add_argument("--output_dir", help="", required=False, default=None, type=str)
 parser.add_argument("--overwrite", action="store_true", help="")
 parser.add_argument(
     "--cache_dir",
@@ -228,7 +228,7 @@ parser.add_argument("--save_steps", default=1000, type=int, help="")
 parser.add_argument(
     "--save_total_limit",
     type=int,
-    default=1,
+    default=2,
     help="Limit the total amount of checkpoints, delete the older checkpoints in the output_dir",
 )
 parser.add_argument("--train_data_ratio", default=1.0, type=float, help="")
@@ -343,7 +343,22 @@ args = vars(parser.parse_args())
 # args = parser.parse_args()
 print(str(args))
 
+
 # check output_dir
+
+
+def exp_dirname(main_file=None):
+    called_script_with_path = sys.argv[0]
+    script_file = main_file or called_script_with_path
+    return os.path.join(
+        "exp",
+        f"{os.path.basename(script_file)}-{datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')}-{socket.gethostname()}-{os.getpid()}",
+    )
+
+
+if args["output_dir"] is None:
+    args["output_dir"] = exp_dirname()
+
 if (
     os.path.exists(args["output_dir"])
     and os.listdir(args["output_dir"])
@@ -356,6 +371,7 @@ if (
         )
     )
 os.makedirs(args["output_dir"], exist_ok=True)
+print(f"\nOutput dir: {args['output_dir']}\n")
 
 # Dictionary Predefined
 SEEDS = [10, 5, 0]  # np.arange(0, 100, 5)

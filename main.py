@@ -1,7 +1,9 @@
+import wandb
 import torch
 from tqdm import tqdm
 import torch.nn as nn
 import logging
+import socket
 import ast
 import glob
 import numpy as np
@@ -24,6 +26,7 @@ from transformers import AutoModel, AutoConfig, AutoTokenizer
 
 SUPPORTED_MODELS = [
     "bert",
+    "bert-base-uncased",
     "todbert",
     "gpt2",
     "todgpt2",
@@ -47,6 +50,8 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
+
+print(f"Hostname {os.gethostname()}")
 
 ## Fix torch random seed
 if args["fix_rand_seed"]:
@@ -72,10 +77,9 @@ args["unified_meta"] = unified_meta
 
 
 ## Create vocab and model class
-args["model_type"] = args["model_type"].lower()
 assert (
-    args["model_type"] in SUPPORTED_MODELS
-), f"{args['model_type']} vs {SUPPORTED_MODELS}"
+    args["model_name_or_path"] in SUPPORTED_MODELS
+), f"{args['model_name_or_path']} vs {SUPPORTED_MODELS}"
 model_class, tokenizer_class, config_class = AutoModel, AutoTokenizer, AutoConfig
 tokenizer = tokenizer_class.from_pretrained(
     args["model_name_or_path"], cache_dir=args["cache_dir"]
@@ -90,6 +94,14 @@ else:
     config = config_class()
 args["config"] = config
 args["num_labels"] = unified_meta["num_labels"]
+
+wandb_run = wandb.init(
+    entity="keya-dialog",
+    project="ToD-BERT-baseline",
+    dir=args["output_dir"],
+    config=args,
+    settings=wandb.Settings(code_dir="."),
+)
 
 
 ## Training and Testing Loop
@@ -149,9 +161,6 @@ if args["do_train"]:
             shuffle=args["task_name"] == "rs",
         )
 
-        ## Create TF Writer
-        # tb_writer = SummaryWriter(comment=args["output_dir"].replace("/", "-"))
-
         # Start training process with early stopping
         loss_best, acc_best, cnt, train_step = 1e10, -1, 0, 0
 
@@ -194,14 +203,14 @@ if args["do_train"]:
                             else dev_loss
                         )
 
-                        ## write to tensorboard
-                        # tb_writer.add_scalar(
-                        #     "train_loss", train_loss / (i + 1), train_step
-                        # )
-                        # tb_writer.add_scalar("eval_loss", dev_loss, train_step)
-                        # tb_writer.add_scalar(
-                        #     "eval_{}".format(args["earlystop"]), dev_acc, train_step
-                        # )
+                        wandb_run.log(
+                            {
+                                "train_loss": train_loss / (i + 1),
+                                "eval_loss": dev_loss,
+                                f"eval_{args['earlystop']}": dev_acc,
+                            },
+                            step=train_step,
+                        )  # log to wandb
 
                         if (dev_loss < loss_best and args["earlystop"] == "loss") or (
                             dev_acc > acc_best and args["earlystop"] != "loss"
@@ -252,7 +261,6 @@ if args["do_train"]:
                         )
 
                 if cnt > args["patience"]:
-                    # tb_writer.close()
                     break
 
         except KeyboardInterrupt:
@@ -288,14 +296,18 @@ if args["do_train"]:
             results = model.evaluation(preds, labels)
             result_runs.append(results)
             logging.info("[{}] Test Results: ".format(nb_eval) + str(results))
-            with open(
-                os.path.join(output_dir_origin, f"result_scores_{nb_eval}.json"), "wt"
-            ) as fp:
+            results_path_scores = os.path.join(
+                output_dir_origin, f"result_scores_{nb_eval}.json"
+            )
+            with open(results_path_scores, "wt") as fp:
                 json.dump(results, fp, cls=NumpyEncoder)
-            with open(
-                os.path.join(output_dir_origin, f"result_preds_{nb_eval}.json"), "wt"
-            ) as fp:
+            wandb_run.save(results_path_scores)
+            results_path_preds = os.path.join(
+                output_dir_origin, f"result_preds_{nb_eval}.json"
+            )
+            with open(results_path_preds, "wt") as fp:
                 json.dump(list(zip(preds, labels)), fp, cls=NumpyEncoder)
+            wandb_run.save(results_path_preds)
 
     ## Average results over runs
     if args["nb_runs"] > 1:
@@ -311,6 +323,9 @@ if args["do_train"]:
             mean = np.mean([r[key] for r in result_runs])
             std = np.std([r[key] for r in result_runs])
             f_out.write("{}: mean {} std {} \n".format(key, mean, std))
+            wandb_run.summary[f"{key}-mean"] = mean
+            wandb_run.summary[f"{key}-std"] = std
+
         f_out.close()
 
 else:
@@ -345,9 +360,8 @@ else:
     model.eval()
 
     for d_eval in ["tst"]:  # ["dev", "tst"]:
-        f_w = open(
-            os.path.join(args["output_dir"], "{}_results.txt".format(d_eval)), "w"
-        )
+        eval_path = os.path.join(args["output_dir"], "{}_results.txt".format(d_eval))
+        f_w = open(eval_path, "w")
 
         ## Start evaluating on the test set
         test_loss = 0
@@ -365,3 +379,5 @@ else:
         print("{} Results: {}".format(d_eval, str(results)))
         f_w.write(str(results))
         f_w.close()
+        wandb_run.summary[f"eval_{d_eval}_loss"] = test_loss
+        wandb_run.save(eval_path)
