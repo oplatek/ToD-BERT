@@ -170,6 +170,7 @@ if args["do_train"]:
         try:
             for epoch in range(args["epoch"]):
                 logging.info("Epoch:{}".format(epoch + 1))
+                wandb_run.log("epoch", epoch, step=train_step)
                 train_loss = 0
                 pbar = tqdm(trn_loader)
                 for i, d in enumerate(pbar):
@@ -221,6 +222,14 @@ if args["do_train"]:
                             loss_best = dev_loss
                             acc_best = dev_acc
                             cnt = 0  # reset
+                            wandb_run.log(
+                                {
+                                    "dev_loss_best": loss_best,
+                                    "dev_acc_best": acc_best,
+                                    "early_stop_patience": cnt,
+                                },
+                                step=train_step,
+                            )
 
                             if args["not_save_model"]:
                                 model_clone = globals()[args["my_model"]](args)
