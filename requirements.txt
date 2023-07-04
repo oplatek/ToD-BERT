@@ -1,11 +1,19 @@
-torch==1.6.0a0+9907a3e
-six==1.15.0
-numpy==1.18.1
-tqdm==4.31.1
-transformers==3.0.2
-nltk
-apex==0.1
+# apex==0.9.10dev  # this is not NVIDIA/apex
+numpy==1.24.4
+bitsandbytes==0.39.0
+transformers==4.30.1
+# tqdm>=4.62.1
+accelerate==0.20.3
+einops==0.6.1
+evaluate==0.4.0
+scikit-learn==1.2.2
+sentencepiece==0.1.99
 ptvsd==4.3.2
-scikit_learn==0.23.2
 simplejson==3.17.2
 tensorboardX==2.1
+git+https://github.com/Tomiinek/MultiWOZ_Evaluation.git@1d03eb438daf30e1f0a5f958f5c78fa0c56eaa38
+# Reporting tool (highly recommended). Better TensorBoard.
+wandb==0.15.3
+# Oplatek's debugging tools - completely optional.
+ipdb
+exp-notifier

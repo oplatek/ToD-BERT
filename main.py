@@ -20,12 +20,12 @@ from models.BERT_DST_Picklist import *
 from models.dual_encoder_ranking import *
 
 # hugging face models
-from transformers import *
+# from transformers import *
 
-try:
-    from torch.utils.tensorboard import SummaryWriter
-except ImportError:
-    from tensorboardX import SummaryWriter
+# try:
+#     from torch.utils.tensorboard import SummaryWriter
+# except ImportError:
+#     from tensorboardX import SummaryWriter
 
 ## model selection
 MODELS = {
@@ -39,6 +39,20 @@ MODELS = {
     "distilbert": (DistilBertModel, DistilBertTokenizer, DistilBertConfig),
     "electra": (ElectraModel, ElectraTokenizer, ElectraConfig),
 }
+
+
+class NumpyEncoder(json.JSONEncoder):
+    """Special json encoder for numpy types"""
+
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
 
 ## Fix torch random seed
 if args["fix_rand_seed"]:
@@ -85,6 +99,8 @@ args["num_labels"] = unified_meta["num_labels"]
 if args["do_train"]:
     result_runs = []
     output_dir_origin = str(args["output_dir"])
+
+    import logging
 
     ## Setup logger
     logging.basicConfig(
@@ -137,7 +153,7 @@ if args["do_train"]:
         )
 
         ## Create TF Writer
-        tb_writer = SummaryWriter(comment=args["output_dir"].replace("/", "-"))
+        # tb_writer = SummaryWriter(comment=args["output_dir"].replace("/", "-"))
 
         # Start training process with early stopping
         loss_best, acc_best, cnt, train_step = 1e10, -1, 0, 0
@@ -182,13 +198,13 @@ if args["do_train"]:
                         )
 
                         ## write to tensorboard
-                        tb_writer.add_scalar(
-                            "train_loss", train_loss / (i + 1), train_step
-                        )
-                        tb_writer.add_scalar("eval_loss", dev_loss, train_step)
-                        tb_writer.add_scalar(
-                            "eval_{}".format(args["earlystop"]), dev_acc, train_step
-                        )
+                        # tb_writer.add_scalar(
+                        #     "train_loss", train_loss / (i + 1), train_step
+                        # )
+                        # tb_writer.add_scalar("eval_loss", dev_loss, train_step)
+                        # tb_writer.add_scalar(
+                        #     "eval_{}".format(args["earlystop"]), dev_acc, train_step
+                        # )
 
                         if (dev_loss < loss_best and args["earlystop"] == "loss") or (
                             dev_acc > acc_best and args["earlystop"] != "loss"
@@ -239,7 +255,7 @@ if args["do_train"]:
                         )
 
                 if cnt > args["patience"]:
-                    tb_writer.close()
+                    # tb_writer.close()
                     break
 
         except KeyboardInterrupt:
@@ -257,6 +273,8 @@ if args["do_train"]:
                     torch.load(output_model_file, lambda storage, loc: storage)
                 )
 
+        model.eval()
+
         ## Run test set evaluation
         pbar = tqdm(tst_loader)
         for nb_eval in range(args["nb_evals"]):
@@ -273,6 +291,14 @@ if args["do_train"]:
             results = model.evaluation(preds, labels)
             result_runs.append(results)
             logging.info("[{}] Test Results: ".format(nb_eval) + str(results))
+            with open(
+                os.path.join(output_dir_origin, f"result_scores_{nb_eval}.json"), "wt"
+            ) as fp:
+                json.dump(results, fp, cls=NumpyEncoder)
+            with open(
+                os.path.join(output_dir_origin, f"result_preds_{nb_eval}.json"), "wt"
+            ) as fp:
+                json.dump(list(zip(preds, labels)), fp, cls=NumpyEncoder)
 
     ## Average results over runs
     if args["nb_runs"] > 1:
