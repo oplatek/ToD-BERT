@@ -24,18 +24,24 @@ from models.dual_encoder_ranking import dual_encoder_ranking
 
 from transformers import AutoModel, AutoConfig, AutoTokenizer
 
-SUPPORTED_MODELS = [
-    "bert",
-    "bert-base-uncased",
-    "todbert",
-    "gpt2",
-    "todgpt2",
-    "dialogpt",
-    "albert",
-    "roberta",
-    "distilbert",
-    "electra",
-]
+# TODO test with variations
+SUPPORTED_MODELS = {
+    "bert": "todo",
+    "bert-base-uncased": "bert",
+    "todbert": "todo",
+    "gpt2": "todo",
+    "todgpt2": "todo",
+    "dialogpt": "todo",
+    "albert": "todo",
+    "roberta": "todo",
+    "distilbert": "todo",
+    "electra": "todo",
+}
+
+assert (
+    args["model_name_or_path"] in SUPPORTED_MODELS
+), f"{args['model_name_or_path']} vs {SUPPORTED_MODELS}"
+args["model_type"] = SUPPORTED_MODELS[args["model_name_or_path"]]
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -51,7 +57,7 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-print(f"Hostname {os.gethostname()}")
+print(f"Hostname {socket.gethostname()}")
 
 ## Fix torch random seed
 if args["fix_rand_seed"]:
@@ -77,9 +83,6 @@ args["unified_meta"] = unified_meta
 
 
 ## Create vocab and model class
-assert (
-    args["model_name_or_path"] in SUPPORTED_MODELS
-), f"{args['model_name_or_path']} vs {SUPPORTED_MODELS}"
 model_class, tokenizer_class, config_class = AutoModel, AutoTokenizer, AutoConfig
 tokenizer = tokenizer_class.from_pretrained(
     args["model_name_or_path"], cache_dir=args["cache_dir"]
