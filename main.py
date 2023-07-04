@@ -1,3 +1,4 @@
+import torch
 from tqdm import tqdm
 import torch.nn as nn
 import logging
@@ -7,38 +8,31 @@ import numpy as np
 import copy
 
 # utils
-from utils.config import *
-from utils.utils_general import *
+from utils.config import args, SEEDS
+from utils.utils_general import get_unified_meta, get_loader
 from utils.utils_multiwoz import *
 from utils.utils_oos_intent import *
 from utils.utils_universal_act import *
 
 # models
-from models.multi_label_classifier import *
-from models.multi_class_classifier import *
-from models.BERT_DST_Picklist import *
-from models.dual_encoder_ranking import *
+from models.multi_label_classifier import multi_label_classifier
+from models.multi_class_classifier import multi_class_classifier
+from models.BERT_DST_Picklist import BeliefTracker
+from models.dual_encoder_ranking import dual_encoder_ranking
 
-# hugging face models
-# from transformers import *
+from transformers import AutoModel, AutoConfig, AutoTokenizer
 
-# try:
-#     from torch.utils.tensorboard import SummaryWriter
-# except ImportError:
-#     from tensorboardX import SummaryWriter
-
-## model selection
-MODELS = {
-    "bert": (BertModel, BertTokenizer, BertConfig),
-    "todbert": (BertModel, BertTokenizer, BertConfig),
-    "gpt2": (GPT2Model, GPT2Tokenizer, GPT2Config),
-    "todgpt2": (GPT2Model, GPT2Tokenizer, GPT2Config),
-    "dialogpt": (AutoModelWithLMHead, AutoTokenizer, GPT2Config),
-    "albert": (AlbertModel, AlbertTokenizer, AlbertConfig),
-    "roberta": (RobertaModel, RobertaTokenizer, RobertaConfig),
-    "distilbert": (DistilBertModel, DistilBertTokenizer, DistilBertConfig),
-    "electra": (ElectraModel, ElectraTokenizer, ElectraConfig),
-}
+SUPPORTED_MODELS = [
+    "bert",
+    "todbert",
+    "gpt2",
+    "todgpt2",
+    "dialogpt",
+    "albert",
+    "roberta",
+    "distilbert",
+    "electra",
+]
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -79,7 +73,10 @@ args["unified_meta"] = unified_meta
 
 ## Create vocab and model class
 args["model_type"] = args["model_type"].lower()
-model_class, tokenizer_class, config_class = MODELS[args["model_type"]]
+assert (
+    args["model_type"] in SUPPORTED_MODELS
+), f"{args['model_type']} vs {SUPPORTED_MODELS}"
+model_class, tokenizer_class, config_class = AutoModel, AutoTokenizer, AutoConfig
 tokenizer = tokenizer_class.from_pretrained(
     args["model_name_or_path"], cache_dir=args["cache_dir"]
 )
