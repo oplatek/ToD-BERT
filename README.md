@@ -59,7 +59,7 @@ tod_bert = model_class.from_pretrained(model_name_or_path)
 ```
 
 ## Direct Usage
-Please refer to the following guide how to use our pre-trained ToD-BERT models. Our model is built on top of the [PyTorch](https://pytorch.org/) library and huggingface [Transformers](https://github.com/huggingface/transformers) library. Let's do a very quick overview of the model architecture and code. Detailed examples for model architecturecan be found in the paper.
+Please refer to the following guide how to use our pre-trained ToD-BERT models. Our model is built on top of the [PyTorch](https://pytorch.org/) library and huggingface [Transformers](https://github.com/huggingface/transformers) library. Let's do a very quick overview of the model architecture and code. Detailed examples for model architecture can be found in the paper.
 
 ```
 # Encode text 
