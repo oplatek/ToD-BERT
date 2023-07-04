@@ -1,3 +1,4 @@
+from pathlib import Path
 import wandb
 import torch
 from tqdm import tqdm
@@ -103,8 +104,9 @@ wandb_run = wandb.init(
     project="ToD-BERT-baseline",
     dir=args["output_dir"],
     config=args,
-    settings=wandb.Settings(code_dir="."),
 )
+# save code but exclude code the from conda or pip environments
+wandb_run.log_code(root=".", exclude_fn=lambda pth: (Path("env") in Path(pth).parents) or (Path("venv") in Path(pth).parents))
 
 
 ## Training and Testing Loop
@@ -170,7 +172,7 @@ if args["do_train"]:
         try:
             for epoch in range(args["epoch"]):
                 logging.info("Epoch:{}".format(epoch + 1))
-                wandb_run.log("epoch", epoch, step=train_step)
+                wandb_run.log({"epoch": epoch}, step=train_step)
                 train_loss = 0
                 pbar = tqdm(trn_loader)
                 for i, d in enumerate(pbar):
