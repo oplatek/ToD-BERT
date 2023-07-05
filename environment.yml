@@ -10,7 +10,7 @@ dependencies:
   - python=3.10
   - pytorch=2.0.1
   - pytorch-cuda=11.8
-  # - rust=1.64.0
+  # - nvidia-apex  # TODO test
   - pip
   - pip:
     - numpy==1.24.4
@@ -23,10 +23,11 @@ dependencies:
     - sentencepiece==0.1.99
     - ptvsd==4.3.2
     - simplejson==3.17.2
-    # - tensorboardX==2.1
     - tensorboard==2.13.0
     - pytest==7.4.0
     - git+https://github.com/Tomiinek/MultiWOZ_Evaluation.git@1d03eb438daf30e1f0a5f958f5c78fa0c56eaa38
+    # k-means clustering
+    - faiss
     # Reporting tool (highly recommended). Better TensorBoard.
     - wandb==0.15.3
     # Oplatek's debugging tools - completely optional.

@@ -5,6 +5,7 @@ import argparse
 import socket
 from tqdm import tqdm
 import numpy as np
+from .utils_general import exp_dirname
 
 
 parser = argparse.ArgumentParser(
@@ -345,16 +346,6 @@ print(str(args))
 
 
 # check output_dir
-
-
-def exp_dirname(main_file=None):
-    called_script_with_path = sys.argv[0]
-    script_file = main_file or called_script_with_path
-    return os.path.join(
-        "exp",
-        f"{os.path.basename(script_file)}-{datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')}-{socket.gethostname()}-{os.getpid()}",
-    )
-
 
 if args["output_dir"] is None:
     args["output_dir"] = exp_dirname()

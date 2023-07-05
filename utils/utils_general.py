@@ -1,3 +1,11 @@
+import datetime
+import glob
+import logging
+import os
+import re
+import shutil
+import socket
+import sys
 import torch
 import torch.utils.data as data
 import random
@@ -8,6 +16,7 @@ from .dataloader_nlu import *
 from .dataloader_dm import *
 from .dataloader_usdl import *
 
+logger = logging.getLogger(__name__)
 
 def get_loader(args, mode, tokenizer, datasets, unified_meta, shuffle=False):
     task = args["task"]
@@ -90,3 +99,49 @@ def get_unified_meta(datasets):
                 unified_meta[key] = value
 
     return unified_meta
+
+
+def rotate_checkpoints(
+    save_total_limit, output_dir, checkpoint_prefix, use_mtime=False
+):
+    if not save_total_limit:
+        return
+    if save_total_limit <= 0:
+        return
+
+    # Check if we should delete older checkpoint(s)
+    glob_checkpoints = glob.glob(
+        os.path.join(output_dir, "{}-*".format(checkpoint_prefix))
+    )
+    if len(glob_checkpoints) <= save_total_limit:
+        return
+
+    ordering_and_checkpoint_path = []
+    for path in glob_checkpoints:
+        if use_mtime:
+            ordering_and_checkpoint_path.append((os.path.getmtime(path), path))
+        else:
+            regex_match = re.match(".*{}-([0-9]+)".format(checkpoint_prefix), path)
+            if regex_match and regex_match.groups():
+                ordering_and_checkpoint_path.append(
+                    (int(regex_match.groups()[0]), path)
+                )
+
+    checkpoints_sorted = sorted(ordering_and_checkpoint_path)
+    checkpoints_sorted = [checkpoint[1] for checkpoint in checkpoints_sorted]
+    number_of_checkpoints_to_delete = max(0, len(checkpoints_sorted) - save_total_limit)
+    checkpoints_to_be_deleted = checkpoints_sorted[:number_of_checkpoints_to_delete]
+    for checkpoint in checkpoints_to_be_deleted:
+        logger.info(
+            "Deleting older checkpoint [{}] due to save_total_limit".format(checkpoint)
+        )
+        shutil.rmtree(checkpoint)
+
+
+def exp_dirname(main_file=None):
+    called_script_with_path = sys.argv[0]
+    script_file = main_file or called_script_with_path
+    return os.path.join(
+        "exp",
+        f"{os.path.basename(script_file)}-{datetime.datetime.now().strftime('%Y-%m-%d_%H%M%S')}-{socket.gethostname()}-{os.getpid()}",
+    )

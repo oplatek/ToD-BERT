@@ -3,3 +3,5 @@ exp/
 data/
 *.ipynb_checkpoints
 runs/
+wandb/
+.vscode/
