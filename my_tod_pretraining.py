@@ -13,7 +13,12 @@ import torch
 from tqdm import tqdm, trange
 from torch.nn.utils.rnn import pad_sequence
 
-from utils.utils_general import get_loader, get_unified_meta, exp_dirname, rotate_checkpoints
+from utils.utils_general import (
+    get_loader,
+    get_unified_meta,
+    exp_dirname,
+    rotate_checkpoints,
+)
 from utils.utils_multiwoz import *
 from utils.utils_camrest676 import *
 from utils.utils_woz import *
@@ -570,7 +575,14 @@ def main():
             torch.distributed.barrier()
 
         global_step, tr_loss = train(
-            args, trn_loader, dev_loader, model, tokenizer, cand_uttr_sys_dict, others
+            args,
+            trn_loader,
+            dev_loader,
+            model,
+            tokenizer,
+            cand_uttr_sys_dict,
+            others,
+            wandb_run,
         )
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 
@@ -846,7 +858,16 @@ def get_candidate_kmeans(args, uttr_sys_dict, tokenizer, model):
     return ToD_BERT_SYS_UTTR_KMEANS, KMEANS_to_SENTS
 
 
-def train(args, trn_loader, dev_loader, model, tokenizer, cand_uttr_sys_dict, others):
+def train(
+    args,
+    trn_loader,
+    dev_loader,
+    model,
+    tokenizer,
+    cand_uttr_sys_dict,
+    others,
+    wandb_run,
+):
     """Train the model"""
     if args.max_steps > 0:
         t_total = args.max_steps
@@ -962,7 +983,9 @@ def train(args, trn_loader, dev_loader, model, tokenizer, cand_uttr_sys_dict, ot
     for _ in train_iterator:
 
         if args.add_rs_loss:
-            compute_loss = mlm_and_rs_loss(model, tokenizer, cand_uttr_sys_dict, args, others)
+            compute_loss = mlm_and_rs_loss(
+                model, tokenizer, cand_uttr_sys_dict, args, others
+            )
         else:
             compute_loss = mlm_only_loss(model, tokenizer, args)
 
@@ -1041,11 +1064,16 @@ def train(args, trn_loader, dev_loader, model, tokenizer, cand_uttr_sys_dict, ot
 
                     if args.evaluate_during_training and args.n_gpu == 1:
                         results = evaluate(args, model, dev_loader, tokenizer)
-                        wandb_run.log(dict((f"eval_{k}", v) for k, v in results.items()), step=global_step)
+                        wandb_run.log(
+                            dict((f"eval_{k}", v) for k, v in results.items()),
+                            step=global_step,
+                        )
                     else:
                         results = {}
                         results["loss"] = best_loss - 0.1  # always saving - nasty hack
-                        logger.warning("Not evaluating during training. Always saving checkpoint and no early stopping!")
+                        logger.warning(
+                            "Not evaluating during training. Always saving checkpoint and no early stopping!"
+                        )
 
                     if results["loss"] < best_loss:
                         patience = 0
@@ -1086,7 +1114,14 @@ def train(args, trn_loader, dev_loader, model, tokenizer, cand_uttr_sys_dict, ot
                     else:
                         patience += 1
                         logger.info("Current patience: patience {}".format(patience))
-                    wandb_run.log({"patience": patience, "best_val_loss": best_loss, "val_loss": results["loss"]}, step=global_step)
+                    wandb_run.log(
+                        {
+                            "patience": patience,
+                            "best_val_loss": best_loss,
+                            "val_loss": results["loss"],
+                        },
+                        step=global_step,
+                    )
 
             if args.max_steps > 0 and global_step > args.max_steps:
                 epoch_iterator.close()
@@ -1108,6 +1143,7 @@ def train(args, trn_loader, dev_loader, model, tokenizer, cand_uttr_sys_dict, ot
         ...
 
     return global_step, tr_loss / global_step
+
 
 class mlm_and_rs_loss:
     def __init__(self, model, tokenizer, cand_uttr_sys_dict, args, others):
@@ -1139,12 +1175,16 @@ class mlm_and_rs_loss:
             if self.args.negative_sampling_by_kmeans
             else {}
         )
-    
+
     def __call__(self, batch):
 
         ## Split dialogue into (context, response) pairs
         input_cont, input_resp, resp_label = mask_for_response_selection(
-            batch, self.tokenizer, self.args, self.cand_uttr_sys_dict, self.kmeans_others
+            batch,
+            self.tokenizer,
+            self.args,
+            self.cand_uttr_sys_dict,
+            self.kmeans_others,
         )
         ## Mask context part for MLM loss
         input_cont, labels = (
@@ -1202,17 +1242,13 @@ class mlm_only_loss:
             inputs, labels = mask_tokens(inputs, self.tokenizer, self.args)
             inputs = inputs.to(self.args.device)
             labels = labels.to(self.args.device)
-            outputs = self.model(
-                inputs, labels=labels, attention_mask=inputs > 0
-            )
+            outputs = self.model(inputs, labels=labels, attention_mask=inputs > 0)
         else:
             labels = inputs.clone()
             masked_indices = labels == 0
             labels[masked_indices] = -100
             outputs = self.model(inputs, labels=labels)
-        loss = outputs[
-            0
-        ]  # model outputs are always tuple in transformers (see doc)
+        loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
         loss_mlm = loss.item()
         return loss, loss_mlm
 
