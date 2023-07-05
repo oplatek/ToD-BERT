@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 import wandb
 import torch
 from tqdm import tqdm
@@ -58,7 +59,7 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-print(f"Hostname {socket.gethostname()}")
+print(f"Hostname {socket.gethostname()}", flush=True, file=sys.stderr)
 
 ## Fix torch random seed
 if args["fix_rand_seed"]:
@@ -106,7 +107,11 @@ wandb_run = wandb.init(
     config=args,
 )
 # save code but exclude code the from conda or pip environments
-wandb_run.log_code(root=".", exclude_fn=lambda pth: (Path("env") in Path(pth).parents) or (Path("venv") in Path(pth).parents))
+wandb_run.log_code(
+    root=".",
+    exclude_fn=lambda pth: (Path("env") in Path(pth).parents)
+    or (Path("venv") in Path(pth).parents),
+)
 
 
 ## Training and Testing Loop
