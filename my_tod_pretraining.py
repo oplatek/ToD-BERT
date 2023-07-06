@@ -129,12 +129,8 @@ def main():
         "The training dataset will be truncated in block of this size for training."
         "Default to the model max input length for single sentence inputs (take into account special tokens).",
     )
-    parser.add_argument(
-        "--do_train", action="store_true", help="Whether to run training."
-    )
-    parser.add_argument(
-        "--do_eval", action="store_true", help="Whether to run eval on the dev set."
-    )
+    parser.add_argument("--do_train", action="store_true", help="Whether to run training.")
+    parser.add_argument("--do_eval", action="store_true", help="Whether to run eval on the dev set.")
     parser.add_argument(
         "--evaluate_during_training",
         action="store_true",
@@ -170,15 +166,9 @@ def main():
         type=float,
         help="The initial learning rate for Adam.",
     )
-    parser.add_argument(
-        "--weight_decay", default=0.0, type=float, help="Weight decay if we apply some."
-    )
-    parser.add_argument(
-        "--adam_epsilon", default=1e-8, type=float, help="Epsilon for Adam optimizer."
-    )
-    parser.add_argument(
-        "--max_grad_norm", default=1.0, type=float, help="Max gradient norm."
-    )
+    parser.add_argument("--weight_decay", default=0.0, type=float, help="Weight decay if we apply some.")
+    parser.add_argument("--adam_epsilon", default=1e-8, type=float, help="Epsilon for Adam optimizer.")
+    parser.add_argument("--max_grad_norm", default=1.0, type=float, help="Max gradient norm.")
     parser.add_argument(
         "--num_train_epochs",
         default=300,
@@ -191,13 +181,9 @@ def main():
         type=int,
         help="If > 0: set total number of training steps to perform. Override num_train_epochs.",
     )
-    parser.add_argument(
-        "--warmup_steps", default=0, type=int, help="Linear warmup over warmup_steps."
-    )
+    parser.add_argument("--warmup_steps", default=0, type=int, help="Linear warmup over warmup_steps.")
 
-    parser.add_argument(
-        "--logging_steps", type=int, default=100, help="Log every X updates steps."
-    )
+    parser.add_argument("--logging_steps", type=int, default=100, help="Log every X updates steps.")
     parser.add_argument(
         "--save_steps",
         type=int,
@@ -215,9 +201,7 @@ def main():
         action="store_true",
         help="Evaluate all checkpoints starting with the same prefix as model_name_or_path ending and ending with step number",
     )
-    parser.add_argument(
-        "--no_cuda", action="store_true", help="Avoid using CUDA when available"
-    )
+    parser.add_argument("--no_cuda", action="store_true", help="Avoid using CUDA when available")
     parser.add_argument(
         "--overwrite_output_dir",
         action="store_true",
@@ -228,9 +212,7 @@ def main():
         action="store_true",
         help="Overwrite the cached training and evaluation sets",
     )
-    parser.add_argument(
-        "--seed", type=int, default=42, help="random seed for initialization"
-    )
+    parser.add_argument("--seed", type=int, default=42, help="random seed for initialization")
 
     parser.add_argument(
         "--fp16",
@@ -250,12 +232,8 @@ def main():
         default=-1,
         help="For distributed training: local_rank",
     )
-    parser.add_argument(
-        "--server_ip", type=str, default="", help="For distant debugging."
-    )
-    parser.add_argument(
-        "--server_port", type=str, default="", help="For distant debugging."
-    )
+    parser.add_argument("--server_ip", type=str, default="", help="For distant debugging.")
+    parser.add_argument("--server_port", type=str, default="", help="For distant debugging.")
 
     ## My add
     parser.add_argument(
@@ -319,9 +297,7 @@ def main():
         action="store_true",
         help="whether use kmeans to select negative samples or select randomly",
     )
-    parser.add_argument(
-        "--nb_kmeans", default=500, type=int, help="number of kmeans clusters"
-    )
+    parser.add_argument("--nb_kmeans", default=500, type=int, help="number of kmeans clusters")
     parser.add_argument("--patience", type=int, default=15, help="waiting to earlystop")
 
     ## data reading related setting (can be ignored here)
@@ -344,12 +320,8 @@ def main():
         action="store_true",
         help="read data by random with a defined ratio",
     )
-    parser.add_argument(
-        "--domain_act", action="store_true", help="use domain_act for mwoz"
-    )
-    parser.add_argument(
-        "-task_name", "--task_name", help="", required=False, default=""
-    )
+    parser.add_argument("--domain_act", action="store_true", help="use domain_act for mwoz")
+    parser.add_argument("-task_name", "--task_name", help="", required=False, default="")
     parser.add_argument("--only_last_turn", action="store_true", help="")
     parser.add_argument("--oracle_domain", action="store_true", help="")
     parser.add_argument("--ontology_version", default="", type=str, help="['', '1.0']")
@@ -360,10 +332,7 @@ def main():
     args = parser.parse_args()
     args_dict = vars(args)
 
-    if (
-        args.model_type in ["bert", "roberta", "distilbert", "camembert"]
-        and not args.mlm
-    ):
+    if args.model_type in ["bert", "roberta", "distilbert", "camembert"] and not args.mlm:
         raise ValueError(
             "BERT and RoBERTa do not have LM heads but masked LM heads. They must be run using the --mlm "
             "flag (masked language modeling)."
@@ -397,16 +366,12 @@ def main():
         import ptvsd
 
         print("Waiting for debugger attach")
-        ptvsd.enable_attach(
-            address=(args.server_ip, args.server_port), redirect_output=True
-        )
+        ptvsd.enable_attach(address=(args.server_ip, args.server_port), redirect_output=True)
         ptvsd.wait_for_attach()
 
     # Setup CUDA, GPU & distributed training
     if args.local_rank == -1 or args.no_cuda:
-        device = torch.device(
-            "cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu"
-        )
+        device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
         args.n_gpu = torch.cuda.device_count()
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
         torch.cuda.set_device(args.local_rank)
@@ -445,8 +410,7 @@ def main():
         # save code but exclude code the from conda or pip environments
         wandb_run.log_code(
             root=".",
-            exclude_fn=lambda pth: (Path("env") in Path(pth).parents)
-            or (Path("venv") in Path(pth).parents),
+            exclude_fn=lambda pth: (Path("env") in Path(pth).parents) or (Path("venv") in Path(pth).parents),
         )
 
     # Load pretrained model and tokenizer
@@ -490,7 +454,6 @@ def main():
 
     # Training
     if args.do_train:
-
         # Barrier to make sure only the first process in distributed training process the dataset,
         # and the others will use the cache
         if args.local_rank not in [-1, 0]:
@@ -500,9 +463,7 @@ def main():
         datasets = {}
         cand_uttr_sys = set()
         for ds_name in ast.literal_eval(args.dataset):
-            data_trn, data_dev, data_tst, data_meta = globals()[
-                "prepare_data_{}".format(ds_name)
-            ](args_dict)
+            data_trn, data_dev, data_tst, data_meta = globals()["prepare_data_{}".format(ds_name)](args_dict)
             # held-out mwoz for now
             if ds_name in ast.literal_eval(args.holdout_dataset):
                 datasets[ds_name] = {
@@ -521,31 +482,19 @@ def main():
 
             for d in datasets[ds_name]["train"]:
                 cand_uttr_sys.add(d["turn_sys"])
-                cand_uttr_sys.update(
-                    set(
-                        [
-                            sent
-                            for si, sent in enumerate(d["dialog_history"])
-                            if si % 2 == 0
-                        ]
-                    )
-                )
+                cand_uttr_sys.update(set([sent for si, sent in enumerate(d["dialog_history"]) if si % 2 == 0]))
         unified_meta = get_unified_meta(datasets)
 
         ## process candidate responses
         if args.nb_addition_negresponse_per_sample > 0:
             cand_uttr_sys = list(cand_uttr_sys)
-            cand_uttr_sys = [
-                s.lower() for s in cand_uttr_sys if len(s.split(" ")) <= 100
-            ]  # remove too long responses
+            cand_uttr_sys = [s.lower() for s in cand_uttr_sys if len(s.split(" ")) <= 100]  # remove too long responses
             cand_uttr_sys_tokens = []
             for cand in tqdm(cand_uttr_sys):
                 cand_ids = tokenizer.tokenize("[CLS] [SYS]") + tokenizer.tokenize(cand)
                 cand_ids = torch.tensor(tokenizer.convert_tokens_to_ids(cand_ids))
                 cand_uttr_sys_tokens.append(cand_ids)
-            cand_uttr_sys_dict = {
-                a: b for a, b in zip(cand_uttr_sys, cand_uttr_sys_tokens)
-            }
+            cand_uttr_sys_dict = {a: b for a, b in zip(cand_uttr_sys, cand_uttr_sys_tokens)}
         else:
             cand_uttr_sys_dict = {}
 
@@ -558,12 +507,8 @@ def main():
         ## start wandb logging after args are set
 
         ## Create Dataloader
-        trn_loader = get_loader(
-            args_dict, "train", tokenizer, datasets, unified_meta, "train"
-        )
-        dev_loader = get_loader(
-            args_dict, "dev", tokenizer, datasets, unified_meta, "dev"
-        )
+        trn_loader = get_loader(args_dict, "train", tokenizer, datasets, unified_meta, "train")
+        dev_loader = get_loader(args_dict, "dev", tokenizer, datasets, unified_meta, "dev")
 
         ## additional information for negative sampling
         others = {}
@@ -590,20 +535,13 @@ def main():
     results = {}
     if args.do_eval and args.local_rank in [-1, 0]:
         checkpoints = list(
-            os.path.dirname(c)
-            for c in sorted(
-                glob.glob(args.output_dir + "/**/" + WEIGHTS_NAME, recursive=True)
-            )
+            os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + "/**/" + WEIGHTS_NAME, recursive=True))
         )
-        logging.getLogger("transformers.modeling_utils").setLevel(
-            logging.WARN
-        )  # Reduce logging
+        logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce logging
         logger.info("Evaluate the following checkpoints: %s", checkpoints)
         for checkpoint in checkpoints:
             global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""
-            prefix = (
-                checkpoint.split("/")[-1] if checkpoint.find("checkpoint") != -1 else ""
-            )
+            prefix = checkpoint.split("/")[-1] if checkpoint.find("checkpoint") != -1 else ""
 
             model = model_class.from_pretrained(checkpoint)
             model.to(args.device)
@@ -622,9 +560,7 @@ def set_seed(args):
         torch.cuda.manual_seed_all(args.seed)
 
 
-def mask_tokens(
-    inputs: torch.Tensor, tokenizer: PreTrainedTokenizer, args
-) -> Tuple[torch.Tensor, torch.Tensor]:
+def mask_tokens(inputs: torch.Tensor, tokenizer: PreTrainedTokenizer, args) -> Tuple[torch.Tensor, torch.Tensor]:
     """Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original."""
 
     inputs = inputs.to("cpu")
@@ -633,12 +569,9 @@ def mask_tokens(
     # We sample a few tokens in each sequence for masked-LM training (with probability args.mlm_probability defaults to 0.15 in Bert/RoBERTa)
     probability_matrix = torch.full(labels.shape, args.mlm_probability)
     special_tokens_mask = [
-        tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True)
-        for val in labels.tolist()
+        tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
     ]
-    probability_matrix.masked_fill_(
-        torch.tensor(special_tokens_mask, dtype=torch.bool), value=0.0
-    )
+    probability_matrix.masked_fill_(torch.tensor(special_tokens_mask, dtype=torch.bool), value=0.0)
 
     # padding position value = 0
     inputs_pad_pos = (inputs == 0).cpu()
@@ -653,28 +586,17 @@ def mask_tokens(
 
     # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
     try:
-        indices_replaced = (
-            torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
-        )
+        indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
     except:
-        indices_replaced = (
-            torch.bernoulli(torch.full(labels.shape, 0.8)).bool().byte()
-            & masked_indices
-        )
+        indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool().byte() & masked_indices
     inputs[indices_replaced] = tokenizer.convert_tokens_to_ids(tokenizer.mask_token)
 
     # 10% of the time, we replace masked input tokens with random word
     try:
-        indices_random = (
-            torch.bernoulli(torch.full(labels.shape, 0.5)).bool()
-            & masked_indices
-            & ~indices_replaced
-        )
+        indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
     except:
         indices_random = (
-            torch.bernoulli(torch.full(labels.shape, 0.5)).bool().byte()
-            & masked_indices
-            & ~indices_replaced
+            torch.bernoulli(torch.full(labels.shape, 0.5)).bool().byte() & masked_indices & ~indices_replaced
         )
     random_words = torch.randint(len(tokenizer), labels.shape, dtype=torch.long)
     if inputs.is_cuda:
@@ -686,21 +608,15 @@ def mask_tokens(
     return inputs, labels
 
 
-def mask_for_response_selection(
-    batch, tokenizer, args, cand_uttr_sys_dict, others, set_max_resp_len=150
-):
+def mask_for_response_selection(batch, tokenizer, args, cand_uttr_sys_dict, others, set_max_resp_len=150):
     """Prepare (context,response) pairs for response contrastive learning (RCL)."""
 
     inputs = batch["context"]
     inputs = inputs.to("cpu")
     batch_size = inputs.size(0)
     probability_matrix = torch.full(inputs.shape, 1)
-    usr_token_idx = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(args.usr_token))[
-        0
-    ]
-    sys_token_idx = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(args.sys_token))[
-        0
-    ]
+    usr_token_idx = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(args.usr_token))[0]
+    sys_token_idx = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(args.sys_token))[0]
     cand_uttr_sys = list(cand_uttr_sys_dict.keys())
     cand_uttr_sys_tokens = list(cand_uttr_sys_dict.values())
 
@@ -735,33 +651,21 @@ def mask_for_response_selection(
     last_sys_position = np.array(last_sys_position)
     max_last_sys_position = max(last_sys_position)
     max_response_len = max(last_usr_position - last_sys_position) + 1
-    max_response_len = (
-        max_response_len if max_response_len < set_max_resp_len else set_max_resp_len
-    )
+    max_response_len = max_response_len if max_response_len < set_max_resp_len else set_max_resp_len
 
     ## placeholders
-    input_contexts = torch.zeros(
-        batch_size, max_last_sys_position
-    ).long()  # .to(args.device)
-    input_responses = torch.zeros(
-        batch_size, max_response_len
-    ).long()  # .to(args.device)
+    input_contexts = torch.zeros(batch_size, max_last_sys_position).long()  # .to(args.device)
+    input_responses = torch.zeros(batch_size, max_response_len).long()  # .to(args.device)
     output_labels = torch.tensor(np.arange(batch_size)).long()  # .to(args.device)
 
     ## assign response indexs by start and end position
     responses = []
-    for bsz_i, (sys_pos, usr_pos) in enumerate(
-        zip(last_sys_position, last_usr_position)
-    ):
+    for bsz_i, (sys_pos, usr_pos) in enumerate(zip(last_sys_position, last_usr_position)):
         input_contexts[bsz_i, :sys_pos] = inputs[bsz_i, :sys_pos]
         input_responses[bsz_i, 0] = inputs[bsz_i, 0]  ## CLS token
-        responses.append(
-            tokenizer.decode(inputs[bsz_i, sys_pos + 1 : usr_pos]).replace(" ", "")
-        )
+        responses.append(tokenizer.decode(inputs[bsz_i, sys_pos + 1 : usr_pos]).replace(" ", ""))
         s, e = (
-            (sys_pos, usr_pos)
-            if usr_pos - sys_pos < max_response_len
-            else (sys_pos, sys_pos + max_response_len - 1)
+            (sys_pos, usr_pos) if usr_pos - sys_pos < max_response_len else (sys_pos, sys_pos + max_response_len - 1)
         )
         input_responses[bsz_i, 1 : e - s + 1] = inputs[bsz_i, s:e]
 
@@ -772,16 +676,12 @@ def mask_for_response_selection(
             if resp in others["ToD_BERT_SYS_UTTR_KMEANS"].keys():
                 cur_cluster = others["ToD_BERT_SYS_UTTR_KMEANS"][resp]
                 candidates = others["KMEANS_to_SENTS"][cur_cluster]
-                nb_selected = min(
-                    args.nb_addition_negresponse_per_sample, len(candidates) - 1
-                )
+                nb_selected = min(args.nb_addition_negresponse_per_sample, len(candidates) - 1)
                 start_pos = random.randint(0, len(candidates) - nb_selected - 1)
                 sampled_neg_resps = candidates[start_pos : start_pos + nb_selected]
                 candidates_tokens += [cand_uttr_sys_dict[r] for r in sampled_neg_resps]
             else:
-                start_pos = random.randint(
-                    0, len(cand_uttr_sys) - args.nb_addition_negresponse_per_sample - 1
-                )
+                start_pos = random.randint(0, len(cand_uttr_sys) - args.nb_addition_negresponse_per_sample - 1)
                 candidates_tokens += cand_uttr_sys_tokens[
                     start_pos : start_pos + args.nb_addition_negresponse_per_sample
                 ]
@@ -846,9 +746,7 @@ def get_candidate_kmeans(args, uttr_sys_dict, tokenizer, model):
     KMEANS_to_SENTS = {i: [] for i in range(args.nb_kmeans)}
     data = [v["emb"] for v in ToD_BERT_SYS_UTTR_EMB.values()]
     data = np.array(data)
-    kmeans_1k = faiss.Kmeans(
-        data.shape[1], args.nb_kmeans, niter=20, nredo=5, verbose=True
-    )
+    kmeans_1k = faiss.Kmeans(data.shape[1], args.nb_kmeans, niter=20, nredo=5, verbose=True)
     kmeans_1k.train(data)
     D, I = kmeans_1k.index.search(data, 1)
     for i, key in enumerate(ToD_BERT_SYS_UTTR_EMB.keys()):
@@ -871,63 +769,41 @@ def train(
     """Train the model"""
     if args.max_steps > 0:
         t_total = args.max_steps
-        args.num_train_epochs = (
-            args.max_steps // (len(trn_loader) // args.gradient_accumulation_steps) + 1
-        )
+        args.num_train_epochs = args.max_steps // (len(trn_loader) // args.gradient_accumulation_steps) + 1
     else:
-        t_total = (
-            len(trn_loader) // args.gradient_accumulation_steps * args.num_train_epochs
-        )
+        t_total = len(trn_loader) // args.gradient_accumulation_steps * args.num_train_epochs
 
     # Prepare optimizer and schedule (linear warmup and decay)
     no_decay = ["bias", "LayerNorm.weight"]
     optimizer_grouped_parameters = [
         {
-            "params": [
-                p
-                for n, p in model.named_parameters()
-                if not any(nd in n for nd in no_decay)
-            ],
+            "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
             "weight_decay": args.weight_decay,
         },
         {
-            "params": [
-                p
-                for n, p in model.named_parameters()
-                if any(nd in n for nd in no_decay)
-            ],
+            "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
             "weight_decay": 0.0,
         },
     ]
-    optimizer = AdamW(
-        optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon
-    )
+    optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=args.warmup_steps, num_training_steps=t_total
     )
 
     # Check if saved optimizer or scheduler states exist
-    if os.path.isfile(
-        os.path.join(args.model_name_or_path, "optimizer.pt")
-    ) and os.path.isfile(os.path.join(args.model_name_or_path, "scheduler.pt")):
+    if os.path.isfile(os.path.join(args.model_name_or_path, "optimizer.pt")) and os.path.isfile(
+        os.path.join(args.model_name_or_path, "scheduler.pt")
+    ):
         # Load in optimizer and scheduler states
-        optimizer.load_state_dict(
-            torch.load(os.path.join(args.model_name_or_path, "optimizer.pt"))
-        )
-        scheduler.load_state_dict(
-            torch.load(os.path.join(args.model_name_or_path, "scheduler.pt"))
-        )
+        optimizer.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "optimizer.pt")))
+        scheduler.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "scheduler.pt")))
 
     if args.fp16:
         try:
             from apex import amp
         except ImportError:
-            raise ImportError(
-                "Please install apex from https://www.github.com/nvidia/apex to use fp16 training."
-            )
-        model, optimizer = amp.initialize(
-            model, optimizer, opt_level=args.fp16_opt_level
-        )
+            raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
+        model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     # multi-gpu training (should be after apex fp16 initialization)
     if args.n_gpu > 1:
@@ -946,9 +822,7 @@ def train(
     logger.info("***** Running training *****")
     logger.info("  Num Epochs = %d", args.num_train_epochs)
     logger.info("  Num batches = %d", len(trn_loader))
-    logger.info(
-        "  Instantaneous batch size per GPU = %d", args.per_gpu_train_batch_size
-    )
+    logger.info("  Instantaneous batch size per GPU = %d", args.per_gpu_train_batch_size)
     logger.info(
         "  Total train batch size (w. parallel, distributed & accumulation) = %d",
         args.train_batch_size
@@ -966,9 +840,7 @@ def train(
     loss_mlm, loss_rs = 0, 0
     patience, best_loss = 0, 1e10
 
-    model_to_resize = (
-        model.module if hasattr(model, "module") else model
-    )  # Take care of distributed/parallel training
+    model_to_resize = model.module if hasattr(model, "module") else model  # Take care of distributed/parallel training
     model_to_resize.resize_token_embeddings(len(tokenizer))
 
     model.zero_grad()
@@ -981,11 +853,8 @@ def train(
     set_seed(args)  # Added here for reproducibility
 
     for _ in train_iterator:
-
         if args.add_rs_loss:
-            compute_loss = mlm_and_rs_loss(
-                model, tokenizer, cand_uttr_sys_dict, args, others
-            )
+            compute_loss = mlm_and_rs_loss(model, tokenizer, cand_uttr_sys_dict, args, others)
         else:
             compute_loss = mlm_only_loss(model, tokenizer, args)
 
@@ -1030,23 +899,15 @@ def train(
             tr_loss += loss.item()
             if (step + 1) % args.gradient_accumulation_steps == 0:
                 if args.fp16:
-                    torch.nn.utils.clip_grad_norm_(
-                        amp.master_params(optimizer), args.max_grad_norm
-                    )
+                    torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), args.max_grad_norm)
                 else:
-                    torch.nn.utils.clip_grad_norm_(
-                        model.parameters(), args.max_grad_norm
-                    )
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), args.max_grad_norm)
                 optimizer.step()
                 scheduler.step()  # Update learning rate schedule
                 model.zero_grad()
                 global_step += 1
 
-                if (
-                    args.local_rank in [-1, 0]
-                    and args.logging_steps > 0
-                    and global_step % args.logging_steps == 0
-                ):
+                if args.local_rank in [-1, 0] and args.logging_steps > 0 and global_step % args.logging_steps == 0:
                     wandb_run.log(
                         {
                             "lr": scheduler.get_lr()[0],
@@ -1056,12 +917,7 @@ def train(
                     )
                     logging_loss = tr_loss
 
-                if (
-                    args.local_rank in [-1, 0]
-                    and args.save_steps > 0
-                    and global_step % args.save_steps == 0
-                ):
-
+                if args.local_rank in [-1, 0] and args.save_steps > 0 and global_step % args.save_steps == 0:
                     if args.evaluate_during_training and args.n_gpu == 1:
                         results = evaluate(args, model, dev_loader, tokenizer)
                         wandb_run.log(
@@ -1096,9 +952,7 @@ def train(
                         torch.save(args, os.path.join(output_dir, "training_args.bin"))
                         logger.info("Saving model checkpoint to %s", output_dir)
 
-                        rotate_checkpoints(
-                            args.save_total_limit, args.output_dir, checkpoint_prefix
-                        )
+                        rotate_checkpoints(args.save_total_limit, args.output_dir, checkpoint_prefix)
 
                         torch.save(
                             optimizer.state_dict(),
@@ -1108,9 +962,7 @@ def train(
                             scheduler.state_dict(),
                             os.path.join(output_dir, "scheduler.pt"),
                         )
-                        logger.info(
-                            "Saving optimizer and scheduler states to %s", output_dir
-                        )
+                        logger.info("Saving optimizer and scheduler states to %s", output_dir)
                     else:
                         patience += 1
                         logger.info("Current patience: patience {}".format(patience))
@@ -1131,9 +983,7 @@ def train(
                 logger.info("Ran out of patience...")
                 break
 
-        if (
-            args.max_steps > 0 and global_step > args.max_steps
-        ) or patience > args.patience:
+        if (args.max_steps > 0 and global_step > args.max_steps) or patience > args.patience:
             train_iterator.close()
             break
 
@@ -1177,7 +1027,6 @@ class mlm_and_rs_loss:
         )
 
     def __call__(self, batch):
-
         ## Split dialogue into (context, response) pairs
         input_cont, input_resp, resp_label = mask_for_response_selection(
             batch,
@@ -1188,9 +1037,7 @@ class mlm_and_rs_loss:
         )
         ## Mask context part for MLM loss
         input_cont, labels = (
-            mask_tokens(input_cont, self.tokenizer, self.args)
-            if self.args.mlm
-            else (input_cont, input_cont)
+            mask_tokens(input_cont, self.tokenizer, self.args) if self.args.mlm else (input_cont, input_cont)
         )
 
         ## Allocate tensors to (gpu) devices
@@ -1209,9 +1056,7 @@ class mlm_and_rs_loss:
 
         ## Calculate MLM loss for the context
         prediction_scores = self.model.cls(sequence_output)
-        loss = self.xeloss(
-            prediction_scores.view(-1, self.model.config.vocab_size), labels.view(-1)
-        )
+        loss = self.xeloss(prediction_scores.view(-1, self.model.config.vocab_size), labels.view(-1))
         loss_mlm = loss.item()
 
         ## Encode the response part with BERT
@@ -1274,7 +1119,6 @@ def evaluate(args, model, dev_loader, tokenizer, prefix=""):
     model.eval()
 
     for batch in tqdm(eval_dataloader, desc="Evaluating"):
-
         inputs = batch["context"].clone()
 
         # inputs, labels = mask_tokens(inputs, tokenizer, args) if args.mlm else (inputs, inputs)
@@ -1290,9 +1134,7 @@ def evaluate(args, model, dev_loader, tokenizer, prefix=""):
 
         with torch.no_grad():
             outputs = (
-                model(inputs, labels=labels, attention_mask=inputs > 0)
-                if args.mlm
-                else model(inputs, labels=labels)
+                model(inputs, labels=labels, attention_mask=inputs > 0) if args.mlm else model(inputs, labels=labels)
             )
 
             lm_loss = outputs[0]

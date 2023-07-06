@@ -22,9 +22,7 @@ class dual_encoder_ranking(nn.Module):
         self.n_gpu = args["n_gpu"]
 
         ### Utterance Encoder
-        self.utterance_encoder = args["model_class"].from_pretrained(
-            self.args["model_name_or_path"]
-        )
+        self.utterance_encoder = args["model_class"].from_pretrained(self.args["model_name_or_path"])
 
         if self.args["fix_encoder"]:
             for p in self.utterance_encoder.parameters():
@@ -32,24 +30,16 @@ class dual_encoder_ranking(nn.Module):
 
         ## Prepare Optimizer
         def get_optimizer_grouped_parameters(model):
-            param_optimizer = [
-                (n, p) for n, p in model.named_parameters() if p.requires_grad
-            ]
+            param_optimizer = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
             no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
             optimizer_grouped_parameters = [
                 {
-                    "params": [
-                        p
-                        for n, p in param_optimizer
-                        if not any(nd in n for nd in no_decay)
-                    ],
+                    "params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
                     "weight_decay": 0.01,
                     "lr": args["learning_rate"],
                 },
                 {
-                    "params": [
-                        p for n, p in param_optimizer if any(nd in n for nd in no_decay)
-                    ],
+                    "params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
                     "weight_decay": 0.0,
                     "lr": args["learning_rate"],
                 },
@@ -70,9 +60,7 @@ class dual_encoder_ranking(nn.Module):
 
     def optimize(self):
         self.loss_grad.backward()
-        clip_norm = torch.nn.utils.clip_grad_norm_(
-            self.parameters(), self.args["grad_clip"]
-        )
+        clip_norm = torch.nn.utils.clip_grad_norm_(self.parameters(), self.args["grad_clip"])
         self.optimizer.step()
 
     def forward(self, data):
@@ -89,7 +77,6 @@ class dual_encoder_ranking(nn.Module):
         context_outputs, response_outputs = [], []
 
         for start, end in zip(start_list, end_list):
-
             inputs_con = {
                 "input_ids": data["context"][start:end],
                 "attention_mask": (data["context"][start:end] > 0).long(),
@@ -116,11 +103,7 @@ class dual_encoder_ranking(nn.Module):
 
         # evaluation for k-to-100
         if (not self.training) and (batch_size < self.args["eval_batch_size"]):
-            response_outputs.append(
-                self.final_response_output[
-                    : self.args["eval_batch_size"] - batch_size, :
-                ]
-            )
+            response_outputs.append(self.final_response_output[: self.args["eval_batch_size"] - batch_size, :])
 
         final_context_output = torch.cat(context_outputs, 0)
         final_response_output = torch.cat(response_outputs, 0)
@@ -133,9 +116,7 @@ class dual_encoder_ranking(nn.Module):
             self.final_response_output = final_response_output.cpu()
 
         # mat
-        logits = torch.matmul(
-            final_context_output, final_response_output.transpose(1, 0)
-        )
+        logits = torch.matmul(final_context_output, final_response_output.transpose(1, 0))
 
         # loss
         labels = torch.tensor(np.arange(batch_size))
@@ -147,9 +128,7 @@ class dual_encoder_ranking(nn.Module):
             self.loss_grad = loss
             self.optimize()
 
-        predictions = np.argsort(
-            logits.detach().cpu().numpy(), axis=1
-        )  # torch.argmax(logits, -1)
+        predictions = np.argsort(logits.detach().cpu().numpy(), axis=1)  # torch.argmax(logits, -1)
 
         outputs = {
             "loss": loss.item(),

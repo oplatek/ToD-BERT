@@ -40,9 +40,7 @@ SUPPORTED_MODELS = {
     "electra": "todo",
 }
 
-assert (
-    args["model_name_or_path"] in SUPPORTED_MODELS
-), f"{args['model_name_or_path']} vs {SUPPORTED_MODELS}"
+assert args["model_name_or_path"] in SUPPORTED_MODELS, f"{args['model_name_or_path']} vs {SUPPORTED_MODELS}"
 args["model_type"] = SUPPORTED_MODELS[args["model_name_or_path"]]
 
 
@@ -69,9 +67,7 @@ if args["fix_rand_seed"]:
 ## Reading data and create data loaders
 datasets = {}
 for ds_name in ast.literal_eval(args["dataset"]):
-    data_trn, data_dev, data_tst, data_meta = globals()[
-        "prepare_data_{}".format(ds_name)
-    ](args)
+    data_trn, data_dev, data_tst, data_meta = globals()["prepare_data_{}".format(ds_name)](args)
     datasets[ds_name] = {
         "train": data_trn,
         "dev": data_dev,
@@ -86,15 +82,11 @@ args["unified_meta"] = unified_meta
 
 ## Create vocab and model class
 model_class, tokenizer_class, config_class = AutoModel, AutoTokenizer, AutoConfig
-tokenizer = tokenizer_class.from_pretrained(
-    args["model_name_or_path"], cache_dir=args["cache_dir"]
-)
+tokenizer = tokenizer_class.from_pretrained(args["model_name_or_path"], cache_dir=args["cache_dir"])
 args["model_class"] = model_class
 args["tokenizer"] = tokenizer
 if args["model_name_or_path"]:
-    config = config_class.from_pretrained(
-        args["model_name_or_path"], cache_dir=args["cache_dir"]
-    )
+    config = config_class.from_pretrained(args["model_name_or_path"], cache_dir=args["cache_dir"])
 else:
     config = config_class()
 args["config"] = config
@@ -109,8 +101,7 @@ wandb_run = wandb.init(
 # save code but exclude code the from conda or pip environments
 wandb_run.log_code(
     root=".",
-    exclude_fn=lambda pth: (Path("env") in Path(pth).parents)
-    or (Path("venv") in Path(pth).parents),
+    exclude_fn=lambda pth: (Path("env") in Path(pth).parents) or (Path("venv") in Path(pth).parents),
 )
 
 
@@ -137,7 +128,6 @@ if args["do_train"]:
 
     ## training loop
     for run in range(args["nb_runs"]):
-
         ## Setup random seed and output dir
         rand_seed = SEEDS[run]
         if args["fix_rand_seed"]:
@@ -185,15 +175,12 @@ if args["do_train"]:
                     outputs = model(d)
                     train_loss += outputs["loss"]
                     train_step += 1
-                    pbar.set_description(
-                        "Training Loss: {:.4f}".format(train_loss / (i + 1))
-                    )
+                    pbar.set_description("Training Loss: {:.4f}".format(train_loss / (i + 1)))
 
                     ## Dev Evaluation
-                    if (
-                        train_step % args["eval_by_step"] == 0
-                        and args["eval_by_step"] != -1
-                    ) or (i == len(pbar) - 1 and args["eval_by_step"] == -1):
+                    if (train_step % args["eval_by_step"] == 0 and args["eval_by_step"] != -1) or (
+                        i == len(pbar) - 1 and args["eval_by_step"] == -1
+                    ):
                         model.eval()
                         dev_loss = 0
                         preds, labels = [], []
@@ -208,11 +195,7 @@ if args["do_train"]:
 
                         dev_loss = dev_loss / len(dev_loader)
                         results = model.evaluation(preds, labels)
-                        dev_acc = (
-                            results[args["earlystop"]]
-                            if args["earlystop"] != "loss"
-                            else dev_loss
-                        )
+                        dev_acc = results[args["earlystop"]] if args["earlystop"] != "loss" else dev_loss
 
                         wandb_run.log(
                             {
@@ -240,31 +223,17 @@ if args["do_train"]:
 
                             if args["not_save_model"]:
                                 model_clone = globals()[args["my_model"]](args)
-                                model_clone.load_state_dict(
-                                    copy.deepcopy(model.state_dict())
-                                )
+                                model_clone.load_state_dict(copy.deepcopy(model.state_dict()))
                             else:
-                                output_model_file = os.path.join(
-                                    args["output_dir"], "pytorch_model.bin"
-                                )
+                                output_model_file = os.path.join(args["output_dir"], "pytorch_model.bin")
                                 if args["n_gpu"] == 1:
                                     torch.save(model.state_dict(), output_model_file)
                                 else:
-                                    torch.save(
-                                        model.module.state_dict(), output_model_file
-                                    )
-                                logging.info(
-                                    "[Info] Model saved at epoch {} step {}".format(
-                                        epoch, train_step
-                                    )
-                                )
+                                    torch.save(model.module.state_dict(), output_model_file)
+                                logging.info("[Info] Model saved at epoch {} step {}".format(epoch, train_step))
                         else:
                             cnt += 1
-                            logging.info(
-                                "[Info] Early stop count: {}/{}...".format(
-                                    cnt, args["patience"]
-                                )
-                            )
+                            logging.info("[Info] Early stop count: {}/{}...".format(cnt, args["patience"]))
 
                         if cnt > args["patience"]:
                             logging.info("Ran out of patient, early stop...")
@@ -293,9 +262,7 @@ if args["do_train"]:
             if torch.cuda.is_available():
                 model.load_state_dict(torch.load(output_model_file))
             else:
-                model.load_state_dict(
-                    torch.load(output_model_file, lambda storage, loc: storage)
-                )
+                model.load_state_dict(torch.load(output_model_file, lambda storage, loc: storage))
 
         model.eval()
 
@@ -315,29 +282,19 @@ if args["do_train"]:
             results = model.evaluation(preds, labels)
             result_runs.append(results)
             logging.info("[{}] Test Results: ".format(nb_eval) + str(results))
-            results_path_scores = os.path.join(
-                output_dir_origin, f"result_scores_{nb_eval}.json"
-            )
+            results_path_scores = os.path.join(output_dir_origin, f"result_scores_{nb_eval}.json")
             with open(results_path_scores, "wt") as fp:
                 json.dump(results, fp, cls=NumpyEncoder)
             wandb_run.save(results_path_scores)
-            results_path_preds = os.path.join(
-                output_dir_origin, f"result_preds_{nb_eval}.json"
-            )
+            results_path_preds = os.path.join(output_dir_origin, f"result_preds_{nb_eval}.json")
             with open(results_path_preds, "wt") as fp:
                 json.dump(list(zip(preds, labels)), fp, cls=NumpyEncoder)
             wandb_run.save(results_path_preds)
 
     ## Average results over runs
     if args["nb_runs"] > 1:
-        f_out = open(
-            os.path.join(output_dir_origin, "eval_results_multi-runs.txt"), "w"
-        )
-        f_out.write(
-            "Average over {} runs and {} evals \n".format(
-                args["nb_runs"], args["nb_evals"]
-            )
-        )
+        f_out = open(os.path.join(output_dir_origin, "eval_results_multi-runs.txt"), "w")
+        f_out.write("Average over {} runs and {} evals \n".format(args["nb_runs"], args["nb_evals"]))
         for key in results.keys():
             mean = np.mean([r[key] for r in result_runs])
             std = np.std([r[key] for r in result_runs])
@@ -348,7 +305,6 @@ if args["do_train"]:
         f_out.close()
 
 else:
-
     ## Load Model
     print("[Info] Loading model from {}".format(args["my_model"]))
     model = globals()[args["my_model"]](args)
@@ -357,9 +313,7 @@ else:
         if torch.cuda.is_available():
             model.load_state_dict(torch.load(args["load_path"]))
         else:
-            model.load_state_dict(
-                torch.load(args["load_path"], lambda storage, loc: storage)
-            )
+            model.load_state_dict(torch.load(args["load_path"], lambda storage, loc: storage))
     else:
         print("[WARNING] No trained model is loaded...")
 

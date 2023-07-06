@@ -8,9 +8,7 @@ import numpy as np
 from .utils_general import exp_dirname
 
 
-parser = argparse.ArgumentParser(
-    description="Task-oriented Dialogue System Benchmarking"
-)
+parser = argparse.ArgumentParser(description="Task-oriented Dialogue System Benchmarking")
 
 
 ## Training Setting
@@ -40,9 +38,7 @@ parser.add_argument(
     type=str,
 )
 parser.add_argument("--my_model", help="my cutomized model", required=False, default="")
-parser.add_argument(
-    "-dr", "--dropout", help="Dropout ratio", required=False, type=float, default=0.2
-)
+parser.add_argument("-dr", "--dropout", help="Dropout ratio", required=False, type=float, default=0.2)
 parser.add_argument(
     "-lr",
     "--learning_rate",
@@ -51,9 +47,7 @@ parser.add_argument(
     type=float,
     default=5e-5,
 )
-parser.add_argument(
-    "-bsz", "--batch_size", help="Batch_size", required=False, type=int, default=16
-)
+parser.add_argument("-bsz", "--batch_size", help="Batch_size", required=False, type=int, default=16)
 parser.add_argument(
     "-ebsz",
     "--eval_batch_size",
@@ -62,12 +56,8 @@ parser.add_argument(
     type=int,
     default=16,
 )
-parser.add_argument(
-    "-hdd", "--hdd_size", help="Hidden size", required=False, type=int, default=400
-)
-parser.add_argument(
-    "-emb", "--emb_size", help="Embedding size", required=False, type=int, default=400
-)
+parser.add_argument("-hdd", "--hdd_size", help="Hidden size", required=False, type=int, default=400)
+parser.add_argument("-emb", "--emb_size", help="Embedding size", required=False, type=int, default=400)
 parser.add_argument(
     "-clip",
     "--grad_clip",
@@ -92,15 +82,11 @@ parser.add_argument(
     default=False,
     type=bool,
 )
-parser.add_argument(
-    "-fixEmb", "--fix_embedding", help="", required=False, default=False, type=bool
-)
+parser.add_argument("-fixEmb", "--fix_embedding", help="", required=False, default=False, type=bool)
 parser.add_argument("--n_gpu", help="", required=False, default=1, type=int)
 parser.add_argument("--eval_by_step", help="", required=False, default=-1, type=int)
 parser.add_argument("--fix_encoder", action="store_true", help="")
-parser.add_argument(
-    "--model_name_or_path", help="", required=False, default="bert", type=str
-)
+parser.add_argument("--model_name_or_path", help="", required=False, default="bert", type=str)
 parser.add_argument("--usr_token", help="", required=False, default="[USR]", type=str)
 parser.add_argument("--sys_token", help="", required=False, default="[SYS]", type=str)
 parser.add_argument(
@@ -110,24 +96,16 @@ parser.add_argument(
     default=0.1,
     type=float,
 )
-parser.add_argument(
-    "--local_rank", type=int, default=-1, help="For distributed training: local_rank"
-)
+parser.add_argument("--local_rank", type=int, default=-1, help="For distributed training: local_rank")
 parser.add_argument(
     "--gradient_accumulation_steps",
     type=int,
     default=1,
     help="Number of updates steps to accumulate before performing a backward/update pass.",
 )
-parser.add_argument(
-    "--weight_decay", default=0.0, type=float, help="Weight decay if we apply some."
-)
-parser.add_argument(
-    "--adam_epsilon", default=1e-8, type=float, help="Epsilon for Adam optimizer."
-)
-parser.add_argument(
-    "--warmup_steps", default=0, type=int, help="Linear warmup over warmup_steps."
-)
+parser.add_argument("--weight_decay", default=0.0, type=float, help="Weight decay if we apply some.")
+parser.add_argument("--adam_epsilon", default=1e-8, type=float, help="Epsilon for Adam optimizer.")
+parser.add_argument("--warmup_steps", default=0, type=int, help="Linear warmup over warmup_steps.")
 parser.add_argument(
     "--fp16",
     action="store_true",
@@ -153,12 +131,8 @@ parser.add_argument(
     action="store_true",
     help="fix random seed for training",
 )
-parser.add_argument(
-    "--nb_runs", default=1, type=int, help="number of runs to conduct during training"
-)
-parser.add_argument(
-    "--nb_evals", default=1, type=int, help="number of runs to conduct during inference"
-)
+parser.add_argument("--nb_runs", default=1, type=int, help="number of runs to conduct during training")
+parser.add_argument("--nb_evals", default=1, type=int, help="number of runs to conduct during inference")
 parser.add_argument("--max_seq_length", default=512, type=int, help="")
 parser.add_argument("--input_name", default="context", type=str, help="")
 
@@ -185,9 +159,7 @@ parser.add_argument(
     required=False,
     default="",
 )
-parser.add_argument(
-    "--example_type", help='type in ["turn", "dial"]', required=False, default="turn"
-)
+parser.add_argument("--example_type", help='type in ["turn", "dial"]', required=False, default="turn")
 parser.add_argument(
     "-ds",
     "--dataset",
@@ -263,12 +235,8 @@ parser.add_argument(
     required=False,
     default=True,
 )
-parser.add_argument(
-    "-paral", "--parallel_decode", help="", required=False, default=True, type=bool
-)
-parser.add_argument(
-    "--self_supervised", help="", required=False, default="generative", type=str
-)
+parser.add_argument("-paral", "--parallel_decode", help="", required=False, default=True, type=bool)
+parser.add_argument("--self_supervised", help="", required=False, default="generative", type=str)
 parser.add_argument(
     "--oracle_domain",
     action="store_true",
@@ -308,12 +276,8 @@ parser.add_argument(
     type=str,
     default="gru",
 )
-parser.add_argument(
-    "--num_rnn_layers", help="rnn layers size", required=False, type=int, default=1
-)
-parser.add_argument(
-    "--zero_init_rnn", action="store_true", help="set initial hidden of rnns zero"
-)
+parser.add_argument("--num_rnn_layers", help="rnn layers size", required=False, type=int, default=1)
+parser.add_argument("--zero_init_rnn", action="store_true", help="set initial hidden of rnns zero")
 parser.add_argument(
     "--do_zeroshot",
     action="store_true",
@@ -335,9 +299,7 @@ parser.add_argument(
     action="store_true",
     help="",
 )
-parser.add_argument(
-    "-viz", "--vizualization", help="vizualization", type=int, required=False, default=0
-)
+parser.add_argument("-viz", "--vizualization", help="vizualization", type=int, required=False, default=0)
 
 
 args = vars(parser.parse_args())
@@ -356,11 +318,7 @@ if (
     and args["do_train"]
     and (not args["overwrite"])
 ):
-    raise ValueError(
-        "Output directory ({}) already exists and is not empty.".format(
-            args["output_dir"]
-        )
-    )
+    raise ValueError("Output directory ({}) already exists and is not empty.".format(args["output_dir"]))
 os.makedirs(args["output_dir"], exist_ok=True)
 print(f"\nOutput dir: {args['output_dir']}\n")
 

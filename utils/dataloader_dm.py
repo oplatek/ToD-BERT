@@ -28,9 +28,7 @@ class Dataset_dm(torch.utils.data.Dataset):
         """Returns one data pair (source and target)."""
 
         if self.args["example_type"] == "turn":
-            dialog_history_str = self.get_concat_context(
-                self.data["dialog_history"][index]
-            )
+            dialog_history_str = self.get_concat_context(self.data["dialog_history"][index])
             context_plain = self.concat_dh_sys_usr(
                 dialog_history_str,
                 self.data["turn_sys"][index],
@@ -39,9 +37,7 @@ class Dataset_dm(torch.utils.data.Dataset):
             context = self.preprocess(context_plain)
             act_plain = self.data["sys_act"][index]
 
-            turn_sys_plain = "{} {}".format(
-                self.sys_token, self.data["turn_sys"][index]
-            )
+            turn_sys_plain = "{} {}".format(self.sys_token, self.data["turn_sys"][index])
             turn_sys = self.preprocess(turn_sys_plain)
 
             act_one_hot = [0] * len(self.unified_meta["sysact"])
@@ -69,10 +65,7 @@ class Dataset_dm(torch.utils.data.Dataset):
 
     def preprocess(self, sequence):
         """Converts words to ids."""
-        tokens = (
-            self.tokenizer.tokenize(self.start_token)
-            + self.tokenizer.tokenize(sequence)[-self.max_length + 1 :]
-        )
+        tokens = self.tokenizer.tokenize(self.start_token) + self.tokenizer.tokenize(sequence)[-self.max_length + 1 :]
         story = torch.Tensor(self.tokenizer.convert_tokens_to_ids(tokens))
         return story
 

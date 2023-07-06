@@ -25,9 +25,7 @@ class multi_label_classifier(nn.Module):
         self.n_gpu = args["n_gpu"]
 
         ### Utterance Encoder
-        self.utterance_encoder = AutoModel.from_pretrained(
-            self.args["model_name_or_path"]
-        )
+        self.utterance_encoder = AutoModel.from_pretrained(self.args["model_name_or_path"])
 
         self.bert_output_dim = args["config"].hidden_size
         # self.hidden_dropout_prob = self.utterance_encoder.config.hidden_dropout_prob
@@ -45,24 +43,16 @@ class multi_label_classifier(nn.Module):
 
         ## Prepare Optimizer
         def get_optimizer_grouped_parameters(model):
-            param_optimizer = [
-                (n, p) for n, p in model.named_parameters() if p.requires_grad
-            ]
+            param_optimizer = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
             no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
             optimizer_grouped_parameters = [
                 {
-                    "params": [
-                        p
-                        for n, p in param_optimizer
-                        if not any(nd in n for nd in no_decay)
-                    ],
+                    "params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
                     "weight_decay": 0.01,
                     "lr": args["learning_rate"],
                 },
                 {
-                    "params": [
-                        p for n, p in param_optimizer if any(nd in n for nd in no_decay)
-                    ],
+                    "params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
                     "weight_decay": 0.0,
                     "lr": args["learning_rate"],
                 },
@@ -81,9 +71,7 @@ class multi_label_classifier(nn.Module):
 
     def optimize(self):
         self.loss_grad.backward()
-        clip_norm = torch.nn.utils.clip_grad_norm_(
-            self.parameters(), self.args["grad_clip"]
-        )
+        clip_norm = torch.nn.utils.clip_grad_norm_(self.parameters(), self.args["grad_clip"])
         self.optimizer.step()
 
     def forward(self, data):

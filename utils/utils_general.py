@@ -18,6 +18,7 @@ from .dataloader_usdl import *
 
 logger = logging.getLogger(__name__)
 
+
 def get_loader(args, mode, tokenizer, datasets, unified_meta, shuffle=False):
     task = args["task"]
     batch_size = args["batch_size"] if mode == "train" else args["eval_batch_size"]
@@ -53,26 +54,18 @@ def get_loader(args, mode, tokenizer, datasets, unified_meta, shuffle=False):
         else:
             if args["train_data_ratio"] != 1:
                 random.Random(args["rand_seed"]).shuffle(combined_ds)
-                combined_ds = combined_ds[
-                    : int(len(combined_ds) * args["train_data_ratio"])
-                ]
+                combined_ds = combined_ds[: int(len(combined_ds) * args["train_data_ratio"])]
             else:
                 random.Random(args["rand_seed"]).shuffle(combined_ds)
                 combined_ds = combined_ds[: args["nb_shots"]]
-        print(
-            "[INFO] Use Training Data: from {} to {}".format(
-                original_len, len(combined_ds)
-            )
-        )
+        print("[INFO] Use Training Data: from {} to {}".format(original_len, len(combined_ds)))
 
     data_info = {k: [] for k in combined_ds[0].keys()}
     for d in combined_ds:
         for k in combined_ds[0].keys():
             data_info[k].append(d[k])
 
-    dataset = globals()["Dataset_" + task](
-        data_info, tokenizer, args, unified_meta, mode, args["max_seq_length"]
-    )
+    dataset = globals()["Dataset_" + task](data_info, tokenizer, args, unified_meta, mode, args["max_seq_length"])
 
     bool_shuffle = mode == "train" or shuffle
 
@@ -101,18 +94,14 @@ def get_unified_meta(datasets):
     return unified_meta
 
 
-def rotate_checkpoints(
-    save_total_limit, output_dir, checkpoint_prefix, use_mtime=False
-):
+def rotate_checkpoints(save_total_limit, output_dir, checkpoint_prefix, use_mtime=False):
     if not save_total_limit:
         return
     if save_total_limit <= 0:
         return
 
     # Check if we should delete older checkpoint(s)
-    glob_checkpoints = glob.glob(
-        os.path.join(output_dir, "{}-*".format(checkpoint_prefix))
-    )
+    glob_checkpoints = glob.glob(os.path.join(output_dir, "{}-*".format(checkpoint_prefix)))
     if len(glob_checkpoints) <= save_total_limit:
         return
 
@@ -123,18 +112,14 @@ def rotate_checkpoints(
         else:
             regex_match = re.match(".*{}-([0-9]+)".format(checkpoint_prefix), path)
             if regex_match and regex_match.groups():
-                ordering_and_checkpoint_path.append(
-                    (int(regex_match.groups()[0]), path)
-                )
+                ordering_and_checkpoint_path.append((int(regex_match.groups()[0]), path))
 
     checkpoints_sorted = sorted(ordering_and_checkpoint_path)
     checkpoints_sorted = [checkpoint[1] for checkpoint in checkpoints_sorted]
     number_of_checkpoints_to_delete = max(0, len(checkpoints_sorted) - save_total_limit)
     checkpoints_to_be_deleted = checkpoints_sorted[:number_of_checkpoints_to_delete]
     for checkpoint in checkpoints_to_be_deleted:
-        logger.info(
-            "Deleting older checkpoint [{}] due to save_total_limit".format(checkpoint)
-        )
+        logger.info("Deleting older checkpoint [{}] due to save_total_limit".format(checkpoint))
         shutil.rmtree(checkpoint)
 
 

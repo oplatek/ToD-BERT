@@ -43,9 +43,7 @@ class BeliefTracker(nn.Module):
         # print("self.num_slots", self.num_slots)
 
         ### Utterance Encoder
-        self.utterance_encoder = args["model_class"].from_pretrained(
-            self.args["model_name_or_path"]
-        )
+        self.utterance_encoder = args["model_class"].from_pretrained(self.args["model_name_or_path"])
 
         self.bert_output_dim = args["config"].hidden_size
         # self.hidden_dropout_prob = self.utterance_encoder.config.hidden_dropout_prob
@@ -56,19 +54,14 @@ class BeliefTracker(nn.Module):
                 p.requires_grad = False
 
         ### slot, slot-value Encoder (not trainable)
-        self.sv_encoder = args["model_class"].from_pretrained(
-            self.args["model_name_or_path"]
-        )
+        self.sv_encoder = args["model_class"].from_pretrained(self.args["model_name_or_path"])
         print("[Info] SV Encoder does not requires grad...")
         for p in self.sv_encoder.parameters():
             p.requires_grad = False
 
         # self.slot_lookup = nn.Embedding(self.num_slots, self.bert_output_dim)
         self.value_lookup = nn.ModuleList(
-            [
-                nn.Embedding(num_label, self.bert_output_dim)
-                for num_label in self.num_labels
-            ]
+            [nn.Embedding(num_label, self.bert_output_dim) for num_label in self.num_labels]
         )
 
         ### RNN Belief Tracker
@@ -84,55 +77,31 @@ class BeliefTracker(nn.Module):
 
         ### My Add
         self.project_W_1 = nn.ModuleList(
-            [
-                nn.Linear(self.bert_output_dim, self.bert_output_dim)
-                for _ in range(self.num_slots)
-            ]
+            [nn.Linear(self.bert_output_dim, self.bert_output_dim) for _ in range(self.num_slots)]
         )
         self.project_W_2 = nn.ModuleList(
-            [
-                nn.Linear(2 * self.bert_output_dim, self.bert_output_dim)
-                for _ in range(self.num_slots)
-            ]
+            [nn.Linear(2 * self.bert_output_dim, self.bert_output_dim) for _ in range(self.num_slots)]
         )
-        self.project_W_3 = nn.ModuleList(
-            [nn.Linear(self.bert_output_dim, 1) for _ in range(self.num_slots)]
-        )
+        self.project_W_3 = nn.ModuleList([nn.Linear(self.bert_output_dim, 1) for _ in range(self.num_slots)])
 
         if self.args["gate_supervision_for_dst"]:
             self.gate_classifier = nn.Linear(self.bert_output_dim, 2)
 
-        self.start_token = (
-            self.tokenizer.cls_token
-            if "bert" in self.args["model_type"]
-            else self.tokenizer.bos_token
-        )
-        self.sep_token = (
-            self.tokenizer.sep_token
-            if "bert" in self.args["model_type"]
-            else self.tokenizer.eos_token
-        )
+        self.start_token = self.tokenizer.cls_token if "bert" in self.args["model_type"] else self.tokenizer.bos_token
+        self.sep_token = self.tokenizer.sep_token if "bert" in self.args["model_type"] else self.tokenizer.eos_token
 
         ## Prepare Optimizer
         def get_optimizer_grouped_parameters(model):
-            param_optimizer = [
-                (n, p) for n, p in model.named_parameters() if p.requires_grad
-            ]
+            param_optimizer = [(n, p) for n, p in model.named_parameters() if p.requires_grad]
             no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
             optimizer_grouped_parameters = [
                 {
-                    "params": [
-                        p
-                        for n, p in param_optimizer
-                        if not any(nd in n for nd in no_decay)
-                    ],
+                    "params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
                     "weight_decay": 0.01,
                     "lr": args["learning_rate"],
                 },
                 {
-                    "params": [
-                        p for n, p in param_optimizer if any(nd in n for nd in no_decay)
-                    ],
+                    "params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
                     "weight_decay": 0.0,
                     "lr": args["learning_rate"],
                 },
@@ -155,13 +124,10 @@ class BeliefTracker(nn.Module):
 
     def optimize(self):
         self.loss_grad.backward()
-        clip_norm = torch.nn.utils.clip_grad_norm_(
-            self.parameters(), self.args["grad_clip"]
-        )
+        clip_norm = torch.nn.utils.clip_grad_norm_(self.parameters(), self.args["grad_clip"])
         self.optimizer.step()
 
     def initialize_slot_value_lookup(self, max_seq_length=32):
-
         self.sv_encoder.eval()
 
         label_ids = []
@@ -172,11 +138,7 @@ class BeliefTracker(nn.Module):
                 label = value_dict_rev[i]
                 label = " ".join([i for i in label.split(" ") if i != ""])
 
-                label_tokens = (
-                    [self.start_token]
-                    + self.tokenizer.tokenize(label)
-                    + [self.sep_token]
-                )
+                label_tokens = [self.start_token] + self.tokenizer.tokenize(label) + [self.sep_token]
                 label_token_ids = self.tokenizer.convert_tokens_to_ids(label_tokens)
                 label_len = len(label_token_ids)
 
@@ -210,9 +172,7 @@ class BeliefTracker(nn.Module):
 
         print("Complete initialization of slot and value lookup")
 
-    def forward(
-        self, data
-    ):  # input_ids, input_len, labels, gate_label, n_gpu=1, target_slot=None):
+    def forward(self, data):  # input_ids, input_len, labels, gate_label, n_gpu=1, target_slot=None):
         batch_size = data["context"].size(0)
         labels = data["belief_ontology"]
 
@@ -274,9 +234,7 @@ class BeliefTracker(nn.Module):
             self.optimize()
 
         if self.args["error_analysis"]:
-            for bsz_i, (pred, label) in enumerate(
-                zip(np.array(predictions), np.array(labels))
-            ):
+            for bsz_i, (pred, label) in enumerate(zip(np.array(predictions), np.array(labels))):
                 assert len(pred) == len(label)
                 joint = 0
                 pred_arr, gold_arr = [], []
