@@ -28,9 +28,9 @@ from transformers import AutoModel, AutoConfig, AutoTokenizer
 
 # TODO test with variations
 SUPPORTED_MODELS = {
-    "bert": "todo",
+    "TODBERT/TOD-BERT-MLM-V1": "todbert",  # example run:  https://wandb.ai/keya-dialog/ToD-BERT-baseline/runs/ro57nq34
+    "TODBERT/TOD-BERT-JNT-V1": "todbert",  # example run: https://wandb.ai/keya-dialog/ToD-BERT-baseline/runs/mnq2u0x4
     "bert-base-uncased": "bert",  # example run: https://wandb.ai/keya-dialog/ToD-BERT-baseline/runs/t23mon3e
-    "todbert": "todo",
     "gpt2": "todo",
     "todgpt2": "todo",
     "dialogpt": "todo",
